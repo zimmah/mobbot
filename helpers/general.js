@@ -1,4 +1,4 @@
-const fs = require('fs');
+const { initialSettings } = require('./settings');
 
 // internal
 const findMembers = (mobId, serverMembers, mobbotId) => {
@@ -18,10 +18,15 @@ const findMobs = (server, mobbotId) => {
     const channelNames = serverChannels.map(channel => channel.name).flat();
     const filteredRoles = serverRoles
         .filter(role => mobbotRoles.includes(role.id))
-        .map(role => ({name: role.name.replace(' ', '-').toLowerCase(), id: role.id}));
+        .map(role => ({name: role.name, id: role.id, channelName: role.name.replace(' ', '-').toLowerCase()}));
     const mobs = filteredRoles
-        .filter(role => channelNames.includes(role.name))
-        .map(mob => ({channelName: mob.name, roleId: mob.id, members: findMembers(mob.id, serverMembers, mobbotId)}));
+        .filter(role => channelNames.includes(role.channelName))
+        .map(mob => ({
+            mobName: mob.name,
+            channelName: mob.channelName,
+            roleId: mob.id,
+            members: findMembers(mob.id, serverMembers, mobbotId)
+        }));
     return mobs;
 }
 
@@ -33,9 +38,15 @@ const init = (client) => {
         mobs: findMobs(server, mobbotId),
     }));
     
-    fs.writeFileSync('./settings/mobs.json', JSON.stringify(servers));
+    initialSettings(servers);
+}
+
+const findMob = (msg) => {
+    const server = require('../settings/servers.json').find(server => server.name === msg.guild.name);
+    return server.mobs.find(mob => mob.channelName === msg.channel.name);
 }
 
 module.exports = {
-    init
+    init,
+    findMob,
 }

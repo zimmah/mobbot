@@ -7,5 +7,5 @@ const isAdmin = (member) => {
 }
 
 module.exports = {
-    isAdmin
+    isAdmin,
 }
