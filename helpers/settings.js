@@ -2,8 +2,8 @@ const fs = require('fs');
 const servers = require('../settings/servers.json');
 
 //internal
-const muteMob = (server, mob) => {
-    
+const updateServerMuteMob = (server, mob) => {
+    const updatedServer = server.mobs.map(m => m.roleId === mob.roleId ? { ...m, muted: true } : m);
     return updatedServer;
 }
 
@@ -13,7 +13,8 @@ const initialSettings = (servers) => {
 }
 
 const mute = (mob) => {
-    updatedServers = servers.map(server => server.mobs.roleId === mob.roleId ? muteMob(server, mob) : server)
+    const serverToUpdate = mob.serverName;
+    const updatedServers = servers.map(server => server.name === serverToUpdate ? updateServerMuteMob(server, mob) : server);
     fs.writeFileSync('./settings/servers.json', JSON.stringify(updatedServers));
 }
 

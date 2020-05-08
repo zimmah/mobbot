@@ -25,7 +25,8 @@ const findMobs = (server, mobbotId) => {
             mobName: mob.name,
             channelName: mob.channelName,
             roleId: mob.id,
-            members: findMembers(mob.id, serverMembers, mobbotId)
+            members: findMembers(mob.id, serverMembers, mobbotId),
+            serverName: server.name
         }));
     return mobs;
 }

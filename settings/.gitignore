@@ -3,4 +3,3 @@
 
 # exception to the rule
 !.gitignore
-!servers.json
