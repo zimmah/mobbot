@@ -16,8 +16,7 @@ client.on('message', msg => {
     const mob = findMob(msg);
     if (msg.content === 'init' && isAdmin(msg.member)) {
         init(client);
-    } else if (mob !== undefined) {
-
+    } else if (mob) {
         if (msg.content === '.') {
             msg.channel.send(`<@&${mob.roleId}> hello mob`);
         }

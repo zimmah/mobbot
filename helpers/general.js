@@ -1,4 +1,5 @@
 const { initialSettings } = require('./settings');
+const fs = require('fs');
 
 // internal
 const findMembers = (mobId, serverMembers, mobbotId) => {
@@ -43,8 +44,8 @@ const init = (client) => {
 }
 
 const findMob = (msg) => {
-    const server = require('../settings/servers.json').find(server => server.name === msg.guild.name);
-    return server.mobs.find(mob => mob.channelName === msg.channel.name);
+    const mob = `./settings/${msg.guild.name}/${msg.channel.name}.json`;
+    return fs.existsSync(mob) && require(`.${mob}`);
 }
 
 module.exports = {
