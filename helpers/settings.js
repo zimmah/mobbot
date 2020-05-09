@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { muteResponse, unmuteResponse } = require('./responses');
 
 const initialSettings = (servers) => {
     servers.forEach(server => {
@@ -9,12 +10,14 @@ const initialSettings = (servers) => {
     });
 }
 
-const mute = (mob) => {
+const mute = (msg, mob) => {
     fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({ ...mob, muted: true }));
+    muteResponse(msg);
 }
 
-const unmute = (mob) => {
+const unmute = (msg, mob) => {
     fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({ ...mob, muted: false }));
+    unmuteResponse(msg);
 }
 
 module.exports = {

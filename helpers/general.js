@@ -1,5 +1,7 @@
-const { initialSettings } = require('./settings');
 const fs = require('fs');
+const { initialSettings } = require('./settings');
+const { stopBreakAndClearTimer } = require('./timers');
+const { stopResponse } = require('./responses');
 
 // internal
 const findMembers = (mobId, serverMembers, mobbotId) => {
@@ -17,9 +19,11 @@ const findMobs = (server, mobbotId) => {
     const serverChannels = server.channels.cache;
     const serverMembers = server.members.cache;
     const channelNames = serverChannels.map(channel => channel.name).flat();
+
     const filteredRoles = serverRoles
         .filter(role => mobbotRoles.includes(role.id))
         .map(role => ({name: role.name, id: role.id, channelName: role.name.replace(' ', '-').toLowerCase()}));
+
     const mobs = filteredRoles
         .filter(role => channelNames.includes(role.channelName))
         .map(mob => ({
@@ -29,6 +33,7 @@ const findMobs = (server, mobbotId) => {
             members: findMembers(mob.id, serverMembers, mobbotId),
             serverName: server.name
         }));
+
     return mobs;
 }
 
@@ -48,7 +53,19 @@ const findMob = (msg) => {
     return fs.existsSync(mob) && require(`.${mob}`);
 }
 
+const stopMobbing = (msg, mob) => {
+    stopBreakAndClearTimer(mob);
+    stopResponse(msg, mob.roleId);
+}
+
+const skip = (msg, mob) => {
+    stopBreakAndClearTimer(mob);
+    console.log('ERROR, NOT COMPLETE FUNCTION')
+}
+
 module.exports = {
     init,
     findMob,
+    stopMobbing,
+    skip,
 }
