@@ -1,4 +1,4 @@
-const { stopBreakReactionCollector } = require('./responses');
+const { stopBreakReactionCollector, stopResponse } = require('./responses');
 
 //internal
 const timers = {};
@@ -6,7 +6,10 @@ const timers = {};
 // external
 const stopBreakAndClearTimer = (mob) => {
     stopBreakReactionCollector(mob.mobName);
-    clearTimeout(timers[mob.mobName]);
+    if (timers[mob.mobName]) {
+        stopResponse(msg, mob.roleId);
+        clearTimeout(timers[mob.mobName]);
+    }
 }
 
 module.exports = {

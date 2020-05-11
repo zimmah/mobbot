@@ -1,7 +1,12 @@
 const fs = require('fs');
 const { initialSettings } = require('./settings');
 const { stopBreakAndClearTimer } = require('./timers');
-const { stopResponse, bufferResponse, createBufferEmbed, errorResponse } = require('./responses');
+const {
+    bufferResponse,
+    createBufferEmbed,
+    errorResponse,
+    initResponse,
+} = require('./responses');
 const { isLengthBelow } = require('./validators');
 
 const buffers ={};
@@ -77,6 +82,7 @@ const init = (client) => {
     }));
     
     initialSettings(servers);
+    initResponse(msg);
 }
 
 const findMob = (msg) => {
@@ -85,13 +91,7 @@ const findMob = (msg) => {
 }
 
 const stopHandler = (msg, mob) => {
-    stopBreakAndClearTimer(mob);
-    stopResponse(msg, mob.roleId);
-}
-
-const skipHandler = (msg, mob) => {
-    stopBreakAndClearTimer(mob);
-    console.log('ERROR, NOT COMPLETE FUNCTION')
+    stopBreakAndClearTimer(msg, mob);
 }
 
 const bufferHandler = (msg, mobName) => {
@@ -113,10 +113,30 @@ const bufferHandler = (msg, mobName) => {
     }
 }
 
+const skipHandler = (msg, mob) => {
+    stopBreakAndClearTimer(msg, mob);
+    console.log('ERROR, NOT COMPLETE FUNCTION')
+}
+
+const startHandler = (msg, mob, isSameOrder) => {
+
+}
+
+const breakHandler = (msg, mob) => {
+
+}
+
+const awayHandler = (msg, mob, isAway) => {
+
+}
+
 module.exports = {
     init,
     findMob,
     stopHandler,
     skipHandler,
     bufferHandler,
+    startHandler,
+    breakHandler,
+    awayHandler,
 }

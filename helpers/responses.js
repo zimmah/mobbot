@@ -31,8 +31,12 @@ const helpResponse = (msg) => {
     msg.channel.send(embed);
 }
 
+const initResponse = (msg) => {
+    msg.channel.send('All set.');
+}
+
 const muteResponse = (msg) => {
-    msg.channel.send(':speak_no_evil:')
+    msg.channel.send(':speak_no_evil:');
 }
 
 const unmuteResponse = (msg) => {
@@ -60,7 +64,7 @@ const errorResponse = (msg, error) => {
     const embed = new MessageEmbed()
         .setTitle('Error: ' + errors[error])
         .setColor('#ff0000');
-    return msg.channel.send(embed);
+    msg.channel.send(embed);
 }
 
 module.exports = {
@@ -72,4 +76,5 @@ module.exports = {
     createBufferEmbed,
     bufferResponse,
     errorResponse,
+    initResponse,
 }
