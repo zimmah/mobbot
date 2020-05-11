@@ -1,11 +1,11 @@
-const { stopBreak } = require('./responses');
+const { stopBreakReactionCollector } = require('./responses');
 
 //internal
 const timers = {};
 
 // external
 const stopBreakAndClearTimer = (mob) => {
-    stopBreak(mob.mobName);
+    stopBreakReactionCollector(mob.mobName);
     clearTimeout(timers[mob.mobName]);
 }
 

@@ -1,7 +1,7 @@
 const { Client } = require('discord.js');
 const { token } = require('./key.json');
 const { isAdmin } = require('./helpers/validators');
-const { init, findMob, stopMobbing, skip } = require('./helpers/general');
+const { init, findMob, stopHandler, skipHandler, bufferHandler } = require('./helpers/general');
 const { helpResponse } = require('./helpers/responses');
 const { mute, unmute } = require('./helpers/settings');
 
@@ -27,12 +27,20 @@ client.on('message', msg => {
             return unmute(msg, mob);
         }
         if (msg.content === 'stop') {
-            return stopMobbing(msg, mob);
+            return stopHandler(msg, mob);
         }
         if (msg.content === 'skip') {
-            return skip(msg, mob);
+            return skipHandler(msg, mob);
         }
-
+        if (msg.content.startsWith('start')) {
+            return startHandler(msg, mob, true);
+        }
+        if (msg.content.startsWith('restart')) {
+            return startHandler(msg, mob, false);
+        }
+        if (msg.content.startsWith('buffer')) {
+            return bufferHandler(msg, mob.mobName);
+          }
     }
 });
 

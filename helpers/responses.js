@@ -2,7 +2,6 @@ const { MessageEmbed } = require('discord.js');
 
 // internal
 const breakReactionCollectors = {};
-const buffers = {};
 
 const helpMessage = `**help** - *shows this help menu.*
 **start <?rounds> <?minutes> <?order>** - *start/resume mobbing.*
@@ -40,14 +39,25 @@ const stopResponse = (msg, id) => {
     msg.channel.send(`Mob timer for <@&${id}> stopped.`);
 }
 
-const stopBreak = (mobName, reason='force') {
+const stopBreakReactionCollector = (mobName, reason='force') => {
     breakReactionCollectors[mobName] && breakReactionCollectors[mobName].stop(reason);
 }
+  
+const createBufferEmbed = (mobName) => {
+    return new MessageEmbed()
+        .setTitle(`Buffer for ${mobName}:`)
+        .setColor('#ffff00')
+        .addFields();
+}
+
+const bufferResponse = (msg, buffer) => msg.channel.send(buffer);
 
 module.exports = {
     helpResponse,
     muteResponse,
     unmuteResponse,
     stopResponse,
-    stopBreak,
+    stopBreakReactionCollector,
+    createBufferEmbed,
+    bufferResponse,
 }
