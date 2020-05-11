@@ -1,7 +1,8 @@
 const fs = require('fs');
 const { initialSettings } = require('./settings');
 const { stopBreakAndClearTimer } = require('./timers');
-const { stopResponse, bufferResponse, createBufferEmbed } = require('./responses');
+const { stopResponse, bufferResponse, createBufferEmbed, errorResponse } = require('./responses');
+const { isLengthBelow } = require('./validators');
 
 const buffers ={};
 
@@ -16,15 +17,20 @@ const removeItemFromBuffer = (msg, mobName) => {
     const id = +msg.content.split(' ')[2];
     if (!isNaN(id)) { 
         const index = buffers[mobName].fields.findIndex(field => field.name === id);
-        index > 0 && buffers[mobName].fields.splice(index, 1);
+        index >= 0 && buffers[mobName].fields.splice(index, 1);
     } else {
-        msg.channel.send('Please remove by id.');
+        throw new Error('removeItemError');
     }
 }
 
 const addItemToBuffer = (msg, mobName) => {
-    const highestId = () => buffers[mobName].fields.reduce( (highest, current) => Math.max(current.name, highest), 0);
-    buffers[mobName].fields.push({name: highestId() + 1, value: msg.content.split(' ').slice(2).join(' ')});
+    const payload = msg.content.split(' ').slice(2).join(' ');
+    if (isLengthBelow(payload, 1024)) {
+        const highestId = () => buffers[mobName].fields.reduce( (highest, current) => Math.max(current.name, highest), 0);
+        buffers[mobName].fields.push({name: highestId() + 1, value: payload});
+    } else {
+        throw new Error('tooLong');
+    }
 }
 
 const clearBuffer = mobName => buffers[mobName].fields = [];
@@ -91,16 +97,20 @@ const skipHandler = (msg, mob) => {
 const bufferHandler = (msg, mobName) => {
     const command = msg.content.split(' ')[1];
     createNewBufferIfNeccesary(mobName);
-    if (command === 'remove' || command === 'delete') {
-      removeItemFromBuffer(msg, mobName);
+    try {
+        if (command === 'remove' || command === 'delete') {
+            removeItemFromBuffer(msg, mobName);
+        }
+        if ( command === 'add') {
+            addItemToBuffer(msg, mobName);
+        }
+        if ( command === 'clear') {
+            clearBuffer(mobName);
+        }
+        return bufferResponse(msg, buffers[mobName]);
+    } catch(error) {
+        return errorResponse(msg, error.message);
     }
-    if ( command === 'add') {
-      addItemToBuffer(msg, mobName);
-    }
-    if ( command === 'clear') {
-      clearBuffer(mobName);
-    }
-    return bufferResponse(msg, buffers[mobName]);
 }
 
 module.exports = {

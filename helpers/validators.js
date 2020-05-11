@@ -6,6 +6,9 @@ const isAdmin = (member) => {
     });
 }
 
+const isLengthBelow = (content, maxLength) => content.length <= maxLength;
+
 module.exports = {
     isAdmin,
+    isLengthBelow,
 }

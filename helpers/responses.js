@@ -2,6 +2,10 @@ const { MessageEmbed } = require('discord.js');
 
 // internal
 const breakReactionCollectors = {};
+const errors = {
+    removeItemError: 'Please remove by id.',
+    tooLong: 'Buffer message length may not exceed 1024 characters.',
+};
 
 const helpMessage = `**help** - *shows this help menu.*
 **start <?rounds> <?minutes> <?order>** - *start/resume mobbing.*
@@ -52,6 +56,13 @@ const createBufferEmbed = (mobName) => {
 
 const bufferResponse = (msg, buffer) => msg.channel.send(buffer);
 
+const errorResponse = (msg, error) => {
+    const embed = new MessageEmbed()
+        .setTitle('Error: ' + errors[error])
+        .setColor('#ff0000');
+    return msg.channel.send(embed);
+}
+
 module.exports = {
     helpResponse,
     muteResponse,
@@ -60,4 +71,5 @@ module.exports = {
     stopBreakReactionCollector,
     createBufferEmbed,
     bufferResponse,
+    errorResponse,
 }

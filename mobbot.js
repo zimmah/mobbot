@@ -1,7 +1,16 @@
 const { Client } = require('discord.js');
 const { token } = require('./key.json');
 const { isAdmin } = require('./helpers/validators');
-const { init, findMob, stopHandler, skipHandler, bufferHandler } = require('./helpers/general');
+const {
+    init,
+    findMob,
+    stopHandler,
+    skipHandler,
+    bufferHandler,
+    startHandler,
+    breakHandler,
+    awayHandler,
+} = require('./helpers/general');
 const { helpResponse } = require('./helpers/responses');
 const { mute, unmute } = require('./helpers/settings');
 
@@ -38,9 +47,18 @@ client.on('message', msg => {
         if (msg.content.startsWith('restart')) {
             return startHandler(msg, mob, false);
         }
+        if (msg.content.startsWith('break')) {
+            return breakHandler(msg, mob);
+        }
+        if (msg.content.startsWith('away')) {
+            return awayHandler(msg, mob, true);
+        }
+        if (msg.content.startsWith('return')) {
+            return awayHandler(msg, mob, false);
+        }
         if (msg.content.startsWith('buffer')) {
             return bufferHandler(msg, mob.mobName);
-          }
+        }
     }
 });
 
