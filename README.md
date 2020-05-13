@@ -53,6 +53,9 @@ Example:
 `start 4 15 Alice Bob Charlie`    
 Will start a mob session with 4 rounds of 15 minutes each, with Alice as the first driver, followed by Bob, followed by Charlie, and then again Alice.
 
+Note:    
+Only use first name or nicknames, don't include spaces in the order, as spaces are used to seperate names.
+
 ## Restarting the mob session
 Type `restart <?rounds> <?round time> <?order>` to force start a new mob session.    
 This will behave exactly like `start`, except it will not resume a previous session, but instead force a new one.
@@ -115,7 +118,7 @@ That's all, simple right?
 Create a new discord application [here](https://discordapp.com/developers/applications) and add a bot to that application.    
 ![](./images/owninstance1.png)   
 
-Once you have the bot, copy the token and save it in a key.txt file.
+Once you have the bot, copy the token and create a `.env` file in the root of the project, then write `TOKEN=paste-your-unique-bot-token-here`.
 ![](./images/owninstance2.png)
 
 ## Adding it to your server
@@ -132,10 +135,10 @@ Finally, confirm that you want to connect the bot to your server.
 ## Configuring it
 The bot is set up to self-configure, however, to work correctly, it is important that the following steps are followed.
 
-make sure to have a key.json with the following format:
+make sure to have a `.env` with the following format in the root folder:
 
 ```js
-{"token": "YOUR_KEY_HERE"}
+`TOKEN=paste-your-unique-bot-token-here`
 ```
 
 * Ensure the bot is assigned the role of each mob in the server. This way the bot will know which mobs to listen to.

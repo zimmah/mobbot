@@ -1,19 +1,11 @@
+require('dotenv').config();
 const { Client } = require('discord.js');
-const { token } = require('./key.json');
-const { isAdmin } = require('./helpers/validators');
-const {
-    init,
-    findMob,
-    stopHandler,
-    skipHandler,
-    bufferHandler,
-    startHandler,
-    breakHandler,
-    awayHandler,
-} = require('./helpers/general');
-const { helpResponse } = require('./helpers/responses');
-const { mute, unmute } = require('./helpers/settings');
+const { isAdmin } = require('./helpers/validators.js');
+const { stopHandler, skipHandler, bufferHandler, startHandler, breakHandler, awayHandler } = require('./helpers/general.js');
+const { helpResponse } = require('./helpers/responses.js');
+const { mute, unmute, init, findMob } = require('./helpers/settings.js');
 
+const token = process.env.TOKEN;
 const client = new Client();
 
 client.on('ready', () => {
@@ -24,7 +16,7 @@ client.on('ready', () => {
 client.on('message', msg => {
     const mob = findMob(msg);
     if (msg.content === 'init' && isAdmin(msg.member)) {
-        init(client);
+        init(client, msg);
     } else if (mob) {
         if (msg.content === 'help') {
             return helpResponse(msg);

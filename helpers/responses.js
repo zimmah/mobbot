@@ -5,6 +5,14 @@ const breakReactionCollectors = {};
 const errors = {
     removeItemError: 'Please remove by id.',
     tooLong: 'Buffer message length may not exceed 1024 characters.',
+    roundAmountNaN: 'Round amount should be a number.',
+    roundAmountTooSmall: 'Round amount should be 1 or more.',
+    roundAmountNotInteger: 'Round amount should be an integer.',
+    roundTimeNaN: 'Round time should be a number.',
+    roundTimeTooSmall: 'Round time should be at least 1 minute.',
+    invalidMobMember: 'Invalid mob member, not all tagged persons are recognized as members of your mob.',
+    inactiveMobMember: 'One or more mob selected mob members are flagged as away, please mark them as returned.',
+    excludedActiveMobMembers: 'One or more active mob members are left out, please mark them as away.',
 };
 
 const helpMessage = `**help** - *shows this help menu.*
@@ -32,7 +40,7 @@ const helpResponse = (msg) => {
 }
 
 const initResponse = (msg) => {
-    msg.channel.send('All set.');
+    msg.reply('all set.');
 }
 
 const muteResponse = (msg) => {
@@ -60,15 +68,17 @@ const createBufferEmbed = (mobName) => {
 
 const bufferResponse = (msg, buffer) => msg.channel.send(buffer);
 
-const errorResponse = (msg, error) => {
+const errorResponse = (msg, error, args = []) => {
+    const errorMessage = args.length ? errors[error](args) : errors[error];
     const embed = new MessageEmbed()
-        .setTitle('Error: ' + errors[error])
+        .setTitle(`Error: ${errorMessage || error}`)
         .setColor('#ff0000');
     msg.channel.send(embed);
 }
 
 module.exports = {
     helpResponse,
+    initResponse,
     muteResponse,
     unmuteResponse,
     stopResponse,
@@ -76,5 +86,4 @@ module.exports = {
     createBufferEmbed,
     bufferResponse,
     errorResponse,
-    initResponse,
 }

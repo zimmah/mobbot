@@ -1,13 +1,16 @@
-const fs = require('fs');
-const { initialSettings } = require('./settings');
+const { updateMobSettings } = require('./settings');
 const { stopBreakAndClearTimer } = require('./timers');
 const {
     bufferResponse,
     createBufferEmbed,
     errorResponse,
-    initResponse,
 } = require('./responses');
-const { isLengthBelow } = require('./validators');
+const {
+    isLengthBelow,
+    validateRoundAmount,
+    validateRoundLength,
+    validateOrder,
+} = require('./validators');
 
 const buffers ={};
 
@@ -40,56 +43,7 @@ const addItemToBuffer = (msg, mobName) => {
 
 const clearBuffer = mobName => buffers[mobName].fields = [];
 
-const findMembers = (mobId, serverMembers, mobbotId) => {
-    const mobMembers = serverMembers
-        .filter(member => member._roles.some(role => role === mobId) && member.id !== mobbotId)
-        .map(member => ({id: member.user.id, name: member.user.username}))
-        .flat();
-    return mobMembers;
-}
-
-const findMobs = (server, mobbotId) => {
-    const mobbot = server.members.cache.filter(member => member.user.id === mobbotId);
-    const mobbotRoles = mobbot.map(member => member._roles).flat();
-    const serverRoles = server.roles.cache;
-    const serverChannels = server.channels.cache;
-    const serverMembers = server.members.cache;
-    const channelNames = serverChannels.map(channel => channel.name).flat();
-
-    const filteredRoles = serverRoles
-        .filter(role => mobbotRoles.includes(role.id))
-        .map(role => ({name: role.name, id: role.id, channelName: role.name.replace(' ', '-').toLowerCase()}));
-
-    const mobs = filteredRoles
-        .filter(role => channelNames.includes(role.channelName))
-        .map(mob => ({
-            mobName: mob.name,
-            channelName: mob.channelName,
-            roleId: mob.id,
-            members: findMembers(mob.id, serverMembers, mobbotId),
-            serverName: server.name
-        }));
-
-    return mobs;
-}
-
 // external
-const init = (client) => {
-    const mobbotId = client.user.id;
-    const servers = client.guilds.cache.map(server => ({
-        name: server.name,
-        mobs: findMobs(server, mobbotId),
-    }));
-    
-    initialSettings(servers);
-    initResponse(msg);
-}
-
-const findMob = (msg) => {
-    const mob = `./settings/${msg.guild.name}/${msg.channel.name}.json`;
-    return fs.existsSync(mob) && require(`.${mob}`);
-}
-
 const stopHandler = (msg, mob) => {
     stopBreakAndClearTimer(msg, mob);
 }
@@ -115,24 +69,54 @@ const bufferHandler = (msg, mobName) => {
 
 const skipHandler = (msg, mob) => {
     stopBreakAndClearTimer(msg, mob);
-    console.log('ERROR, NOT COMPLETE FUNCTION')
+    throw new Error('Not fully implemented');
 }
 
-const startHandler = (msg, mob, isSameOrder) => {
+const startHandler = (msg, mob, keepSameOrder) => {
+    const [newRounds, newRoundTime] = msg.content.split(' ').slice(1,3);
+    const newOrder = msg.mentions.users.map(user => user.id);
+    try {
+        newRounds && validateRoundAmount(newRounds);
+        newRoundTime && validateRoundLength(newRoundTime);
+        newOrder.length > 0 && validateOrder(newOrder, mob);
+        updateMobSettings({newRounds, newRoundTime, newOrder}, keepSameOrder, mob);
+    } catch(error) {
+        console.log('catch block', error)
+        errorResponse(msg, error.message);
+    }
 
+    throw new Error('Not fully implemented');
+    // try {
+    //     if (setRounds !== undefined) {
+    //         isValidRoundAmount(setRounds);
+    //     }
+    //     if (setRoundTime !== undefined) {
+    //         isValidRoundLength(setRoundTime);
+    //     }
+    //     if (setOrder.length > 0) {
+    //         updateMobSettings({setRounds, setRoundTime, setOrder}, mob);
+    //         // keepSameOrder or randomize order
+    //     }
+    // } 
+    // catch(error) {
+    //     return errorResponse(msg, error.message);
+    // }
+            
+    // const { mobSettings } = require(`../settings/${mob.serverName}/${mob.mobName}.json`);
+    // if(mobSettings) {
+    //     const { rounds, roundTime, order } = mobSettings;
+    // }
 }
 
 const breakHandler = (msg, mob) => {
-
+    throw new Error('Not implemented');
 }
 
 const awayHandler = (msg, mob, isAway) => {
-
+    throw new Error('Not implemented');
 }
 
 module.exports = {
-    init,
-    findMob,
     stopHandler,
     skipHandler,
     bufferHandler,
