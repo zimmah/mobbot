@@ -97,13 +97,17 @@ const unmute = (msg, mob) => {
     unmuteResponse(msg);
 }
 
+const updateOrder = (mob) => {
+
+}
+
 const updateMobSettings = ({newRounds = 3, newRoundTime = 20, newOrder = []} = newSettings = {}, keepSameOrder, mob) => {
     const oldSettings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
     if (newOrder.length === 0 && (!keepSameOrder || !oldSettings.mobSettings)) {
         newOrder = randomizeOrder(mob);
     }
     if (shouldMobSettingsUpdate({newRounds, newRoundTime, newOrder}, oldSettings)) {
-        const settings = JSON.stringify({...oldSettings, mobSettings: {rounds: newRounds, roundtime: newRoundTime, order: newOrder}});
+        const settings = JSON.stringify({...oldSettings, mobSettings: {rounds: newRounds, roundTime: newRoundTime, order: newOrder}});
         fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, settings);
     }
 }
@@ -114,4 +118,5 @@ module.exports = {
     mute,
     unmute,
     updateMobSettings,
+    updateOrder,
 }

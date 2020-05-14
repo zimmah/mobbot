@@ -1,5 +1,5 @@
 const { updateMobSettings } = require('./settings');
-const { stopBreakAndClearTimer } = require('./timers');
+const { stopBreakAndClearTimer, startMobTimer } = require('./timers');
 const {
     bufferResponse,
     createBufferEmbed,
@@ -73,6 +73,7 @@ const skipHandler = (msg, mob) => {
 }
 
 const startHandler = (msg, mob, keepSameOrder) => {
+    stopBreakAndClearTimer(mob);
     const [newRounds, newRoundTime] = msg.content.split(' ').slice(1,3);
     const newOrder = msg.mentions.users.map(user => user.id);
     try {
@@ -80,32 +81,12 @@ const startHandler = (msg, mob, keepSameOrder) => {
         newRoundTime && validateRoundLength(newRoundTime);
         newOrder.length > 0 && validateOrder(newOrder, mob);
         updateMobSettings({newRounds, newRoundTime, newOrder}, keepSameOrder, mob);
+        const { mobSettings } = require(`./settings/${mob.serverName}/${mob.mobName}.json`);
+        startResponse(msg, mob, mobSettings);
+        startMobTimer(msg, mob, mobSettings);
     } catch(error) {
-        console.log('catch block', error)
         errorResponse(msg, error.message);
     }
-
-    throw new Error('Not fully implemented');
-    // try {
-    //     if (setRounds !== undefined) {
-    //         isValidRoundAmount(setRounds);
-    //     }
-    //     if (setRoundTime !== undefined) {
-    //         isValidRoundLength(setRoundTime);
-    //     }
-    //     if (setOrder.length > 0) {
-    //         updateMobSettings({setRounds, setRoundTime, setOrder}, mob);
-    //         // keepSameOrder or randomize order
-    //     }
-    // } 
-    // catch(error) {
-    //     return errorResponse(msg, error.message);
-    // }
-            
-    // const { mobSettings } = require(`../settings/${mob.serverName}/${mob.mobName}.json`);
-    // if(mobSettings) {
-    //     const { rounds, roundTime, order } = mobSettings;
-    // }
 }
 
 const breakHandler = (msg, mob) => {

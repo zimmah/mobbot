@@ -39,20 +39,17 @@ const helpResponse = (msg) => {
     msg.channel.send(embed);
 }
 
-const initResponse = (msg) => {
-    msg.reply('all set.');
-}
+const initResponse = (msg) => msg.reply('all set.');
+const muteResponse = (msg) => msg.channel.send(':speak_no_evil:');
+const unmuteResponse = (msg) => msg.channel.send(':speaking_head:');
+const stopResponse = (msg, id) => msg.channel.send(`Mob timer for <@&${id}> stopped.`);
+const bufferResponse = (msg, buffer) => msg.channel.send(buffer);
+const breakReminderResponse = (msg, id) => msg.channel.send(`<@&${id}> 1 minute left before break. Don't forget to push to github.`);
+const pushReminderResponse = (msg, id) => msg.channel.send(`<@&${id}> 1 minute left before driver change. Don't forget to push to github.`);
+const continueResponse = (msg, id, next) => msg.channel.send(`<@${id} next up, <@${next}>!`);
 
-const muteResponse = (msg) => {
-    msg.channel.send(':speak_no_evil:');
-}
-
-const unmuteResponse = (msg) => {
-    msg.channel.send(':speaking_head:');
-}
-
-const stopResponse = (msg, id) => {
-    msg.channel.send(`Mob timer for <@&${id}> stopped.`);
+const breakResponse = (msg, id) => {
+    
 }
 
 const stopBreakReactionCollector = (mobName, reason='force') => {
@@ -65,8 +62,6 @@ const createBufferEmbed = (mobName) => {
         .setColor('#ffff00')
         .addFields();
 }
-
-const bufferResponse = (msg, buffer) => msg.channel.send(buffer);
 
 const errorResponse = (msg, error, args = []) => {
     const errorMessage = args.length ? errors[error](args) : errors[error];
@@ -82,8 +77,12 @@ module.exports = {
     muteResponse,
     unmuteResponse,
     stopResponse,
+    bufferResponse,
+    breakReminderResponse,
+    pushReminderResponse,
+    continueResponse,
+    breakResponse,
     stopBreakReactionCollector,
     createBufferEmbed,
-    bufferResponse,
     errorResponse,
 }
