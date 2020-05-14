@@ -8,20 +8,27 @@ const {
 //internal
 const timers = {};
 
+const honk = async (mob) => {
+    // const connection = await mob.
+}
+
 const breakReminder = (msg, mob) => {
     breakReminderResponse(msg, mob.roleId);
     timers[mob.mobName] = setTimeout(() => {
         breakResponse(msg, mob.roleId);
+        const settings = require(`./settings/${mob.serverName}/${mob.mobName}.json`);
+        if (!settings.muted) honk(mob);
     }, 60 * 1000);
 }
 
 const pushReminder = (msg, mob) => {
     pushReminderResponse(msg, mob.roleId);
     timers[mob.mobName] = setTimeout(() => {
-        const { order } = require(`./settings/${mob.serverName}/${mob.mobName}.json`).mobSettings;
-        const updatedSettings = {rounds: rounds - 1, roundTime, order};
+        const settings = require(`./settings/${mob.serverName}/${mob.mobName}.json`);
+        const updatedSettings = {rounds: rounds - 1, roundTime, order: settings.mobSettings.order};
         continueResponse(msg, mob.roleId, order[0]);
         startMobTimer(msg, mob, updatedSettings);
+        if (!settings.muted) honk(mob);
     }, 60 * 1000);
 }
 
