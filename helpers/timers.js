@@ -6,6 +6,7 @@ const {
 } = require('./responses');
 
 //internal
+let isBusy = false;
 const timers = {};
 
 const honk = async (mob) => {
