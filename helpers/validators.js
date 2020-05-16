@@ -46,7 +46,7 @@ const validateOrder = (newOrder, mob) => {
     if (!newOrder.every(member => memberIdMap.includes(member))){
         throw new ValidationError('invalidMobMember');
     } 
-    const activeMemberIdMap = members.filter(member => member.away !== true).map(member => member.id);
+    const activeMemberIdMap = members.reduce((acc, cur) => !cur.away ? [...acc, cur.id] : acc, []);
     if (!newOrder.every(member => activeMemberIdMap.includes(member))) {
         throw new ValidationError('inactiveMobMember');
     }

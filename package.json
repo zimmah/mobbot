@@ -5,7 +5,7 @@
   "main": "mobbot.js",
   "scripts": {
     "start": "node mobbot.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --reporter spec --exit \"tests/**/*.spec.js\"",
     "lint": "eslint ."
   },
   "repository": {

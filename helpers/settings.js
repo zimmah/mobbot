@@ -1,4 +1,5 @@
 const fs = require('fs');
+const fsp = require('fs').promises;
 const { isSameOrder } = require('./validators');
 const { muteResponse, unmuteResponse, initResponse} = require('./responses');
 
@@ -8,6 +9,7 @@ const randomizeOrder = mob => {
 }
 
 const shouldMobSettingsUpdate = (newSettings, oldSettings) => {
+    console.log('settings should update');
     const { mobSettings } = oldSettings;
     if (mobSettings === undefined) return true;
 
@@ -16,24 +18,27 @@ const shouldMobSettingsUpdate = (newSettings, oldSettings) => {
     if ( roundTime === newRoundTime && rounds === newRounds && isSameOrder(order, newOrder)) {
         return false;
     }
+    console.log('settings should definitly update')
     return true;
 }
 
 const initialSettings = (servers) => {
-    servers.forEach(server => {
+    const writes = [];
+    servers.forEach((server) => {
         fs.existsSync(`./settings/${server.name}`) || fs.mkdirSync(`./settings/${server.name}`);
-        server.mobs.forEach(mob => {
+        server.mobs.forEach(async (mob) => {
             try {
-                fs.accessSync(`./settings/${server.name}/${mob.channelName}.json`);
+                await fsp.access(`./settings/${server.name}/${mob.channelName}.json`);
                 const existingSettings = require(`../settings/${server.name}/${mob.channelName}.json`);
                 if (JSON.stringify({...existingSettings, ...mob}) !== JSON.stringify({existingSettings})) {
-                    fs.writeFileSync(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify({...existingSettings, ...mob}));
+                    writes.push(fsp.writeFile(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify({...existingSettings, ...mob})));
                 }
-            } catch (error) {
-                fs.writeFileSync(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify(mob));
+            } catch {
+                writes.push(fsp.writeFile(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify(mob)));
             }
         });
     });
+    return Promise.all(writes);
 }
 
 const findMembers = (mobId, serverMembers, mobbotId) => {
@@ -97,18 +102,33 @@ const unmute = (msg, mob) => {
     unmuteResponse(msg);
 }
 
-const updateOrder = (mob) => {
-
+const updateBreakTime = (mob, breakTime = 10) => {
+    const settings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
+    const updatedSettings = JSON.stringify({ ...settings, mobSettings: { ...(settings.mobSettings), breakTime } })
+    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, updatedSettings);
 }
 
-const updateMobSettings = ({newRounds = 3, newRoundTime = 20, newOrder = []} = newSettings = {}, keepSameOrder, mob) => {
+const updateOrder = (mob) => {
+    const settings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
+    const [first, ...rest] = settings.mobSettings.order;
+    const newOrder = [...rest, first];
+    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({...settings, order: newOrder}));
+}
+
+const updateMobSettings = async ({ newRounds, newRoundTime, newOrder } = newSettings = {}, keepSameOrder, mob) => {
     const oldSettings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
     if (newOrder.length === 0 && (!keepSameOrder || !oldSettings.mobSettings)) {
         newOrder = randomizeOrder(mob);
     }
     if (shouldMobSettingsUpdate({newRounds, newRoundTime, newOrder}, oldSettings)) {
         const settings = JSON.stringify({...oldSettings, mobSettings: {rounds: newRounds, roundTime: newRoundTime, order: newOrder}});
-        fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, settings);
+        console.log(settings);
+        try {
+            await fsp.unlink(`./settings/${mob.serverName}/${mob.channelName}.json`);
+            return fsp.writeFile(`./settings/${mob.serverName}/${mob.channelName}.json`, settings);
+        } catch (e) {
+            console.log(e)
+        }
     }
 }
 
@@ -117,6 +137,7 @@ module.exports = {
     init,
     mute,
     unmute,
-    updateMobSettings,
+    updateBreakTime,
     updateOrder,
+    updateMobSettings,
 }

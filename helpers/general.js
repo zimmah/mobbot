@@ -4,6 +4,7 @@ const {
     bufferResponse,
     createBufferEmbed,
     errorResponse,
+    startResponse,
 } = require('./responses');
 const {
     isLengthBelow,
@@ -27,17 +28,18 @@ const removeItemFromBuffer = (msg, mobName) => {
         const index = buffers[mobName].fields.findIndex(field => field.name === id);
         index >= 0 && buffers[mobName].fields.splice(index, 1);
     } else {
-        throw new Error('removeItemError');
+        throw new Error('removeItemError'); // this should be in validators.js
     }
 }
 
 const addItemToBuffer = (msg, mobName) => {
     const payload = msg.content.split(' ').slice(2).join(' ');
     if (isLengthBelow(payload, 1024)) {
-        const highestId = () => buffers[mobName].fields.reduce( (highest, current) => Math.max(current.name, highest), 0);
+        const highestId = () => buffers[mobName].fields
+            .reduce( (highest, current) => Math.max(current.name, highest), 0);
         buffers[mobName].fields.push({name: highestId() + 1, value: payload});
     } else {
-        throw new Error('tooLong');
+        throw new Error('tooLong'); // this should be in validators.js
     }
 }
 
@@ -54,11 +56,9 @@ const bufferHandler = (msg, mobName) => {
     try {
         if (command === 'remove' || command === 'delete') {
             removeItemFromBuffer(msg, mobName);
-        }
-        if ( command === 'add') {
+        } else if ( command === 'add') {
             addItemToBuffer(msg, mobName);
-        }
-        if ( command === 'clear') {
+        } else if ( command === 'clear') {
             clearBuffer(mobName);
         }
         return bufferResponse(msg, buffers[mobName]);
@@ -69,19 +69,31 @@ const bufferHandler = (msg, mobName) => {
 
 const skipHandler = (msg, mob) => {
     stopBreakAndClearTimer(msg, mob);
-    throw new Error('Not fully implemented');
+    throw new Error('skip handler Not fully implemented');
 }
 
-const startHandler = (msg, mob, keepSameOrder) => {
-    stopBreakAndClearTimer(mob);
+const autoStartHandler = (msg, mob) => {
+    stopBreakAndClearTimer(msg, mob);
+    const { mobSettings } = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
+    startResponse(msg, mob, mobSettings);
+    startMobTimer(msg, mob, mobSettings);
+}
+
+const startHandler = async (msg, mob, keepSameOrder) => {
+    stopBreakAndClearTimer(msg, mob);
     const [newRounds, newRoundTime] = msg.content.split(' ').slice(1,3);
+    console.log(newRounds, newRoundTime);
     const newOrder = msg.mentions.users.map(user => user.id);
     try {
         newRounds && validateRoundAmount(newRounds);
         newRoundTime && validateRoundLength(newRoundTime);
         newOrder.length > 0 && validateOrder(newOrder, mob);
-        updateMobSettings({newRounds, newRoundTime, newOrder}, keepSameOrder, mob);
-        const { mobSettings } = require(`./settings/${mob.serverName}/${mob.mobName}.json`);
+        // console.log(updateMobSettings({newRounds, newRoundTime, newOrder}, keepSameOrder, mob));
+
+        await updateMobSettings({newRounds, newRoundTime, newOrder}, keepSameOrder, mob)
+        // const { mobSettings } = require(`../settings/${mob.serverName}/newfile.json`);
+        const { mobSettings } = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
+        console.log(mobSettings);
         startResponse(msg, mob, mobSettings);
         startMobTimer(msg, mob, mobSettings);
     } catch(error) {
@@ -90,17 +102,18 @@ const startHandler = (msg, mob, keepSameOrder) => {
 }
 
 const breakHandler = (msg, mob) => {
-    throw new Error('Not implemented');
+    throw new Error('break handler Not implemented');
 }
 
 const awayHandler = (msg, mob, isAway) => {
-    throw new Error('Not implemented');
+    throw new Error('away handler Not implemented');
 }
 
 module.exports = {
     stopHandler,
     skipHandler,
     bufferHandler,
+    autoStartHandler,
     startHandler,
     breakHandler,
     awayHandler,
