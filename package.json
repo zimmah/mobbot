@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "discord bot for assisting with remote mobbing",
   "main": "mobbot.js",
+  "type": "module",
   "scripts": {
-    "start": "node mobbot.js",
+    "start": "node -r dotenv/config mobbot.js",
     "test": "mocha --reporter spec --exit \"tests/**/*.spec.js\"",
     "lint": "eslint ."
   },

@@ -1,65 +1,49 @@
-class ValidationError {
-    constructor(message, data) {
-        this.message = message;
-        this.data = data;
-    }
-}
+class ValidationError { constructor(message) { this.message = message } };
 
-const isAdmin = (member) => {
-    return member.roles.cache.some(role => {
-        const bitfieldHex = role.permissions.bitfield.toString(16);
-        const lastBit = bitfieldHex.slice(bitfieldHex.length - 1);
-        return `0x${lastBit}`.toString(10) >= 8;
-    });
-}
-
-const isSameOrder = (order, newOrder) => {
-    return order.every((id, index) => id === newOrder[index]);
-}
-
-const isLengthBelow = (content, maxLength) => content.length <= maxLength;
+const isAdmin = (member) => member.hasPermission('ADMINISTRATOR');
 
 const validateRoundAmount = (amount) => {
-    if (isNaN(+amount)) {
-        throw new ValidationError('roundAmountNaN');
-    }
-    if (+amount <= 0) {
-        throw new ValidationError('roundAmountTooSmall');
-    }
-    if (+amount%1 !== 0) {
-        throw new ValidationError('roundAmountNotInteger');
-    }
+    if (amount === undefined) return;
+    if (isNaN(+amount)) throw new ValidationError('AMOUNT_NAN');
+    if (+amount <= 0) throw new ValidationError('AMOUNT_TOO_SMALL');
+    if (+amount%1 !== 0) throw new ValidationError('AMOUNT_NOT_INT');
 }
 
-const validateRoundLength = (minutes) => {
-    if (isNaN(+minutes)) {
-        throw new ValidationError('roundTimeNaN');
-    }
-    if (+minutes < 1) {
-        throw new ValidationError('roundTimeTooSmall');
-    }
+const validateTime = (minutes) => {
+    if (minutes === undefined) return;
+    if (isNaN(+minutes)) throw new ValidationError('TIME_NAN');
+    if (+minutes < 1) throw new ValidationError('TIME_TOO_SMALL');
 }
 
-const validateOrder = (newOrder, mob) => {
-    const { members } = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
+const validateOrder = (newOrder, settings) => {
+    if (newOrder.length === 0) return;
+    const { members } = settings;
     const memberIdMap = members.map(member => member.id);
     if (!newOrder.every(member => memberIdMap.includes(member))){
-        throw new ValidationError('invalidMobMember');
-    } 
-    const activeMemberIdMap = members.reduce((acc, cur) => !cur.away ? [...acc, cur.id] : acc, []);
+        throw new ValidationError('INVALID_MEMBER');
+    }
+    const activeMemberIdMap = members.reduce((acc, cur) => !cur.isAway ? [...acc, cur.id] : acc, []);
     if (!newOrder.every(member => activeMemberIdMap.includes(member))) {
-        throw new ValidationError('inactiveMobMember');
+        throw new ValidationError('INACTIVE_MEMBER');
     }
     if (!activeMemberIdMap.every(member => newOrder.includes(member))) {
-        throw new ValidationError('excludedActiveMobMembers');
+        console.log(activeMemberIdMap)
+        throw new ValidationError('EXCLUDED_MEMBER');
     }
 }
 
-module.exports = {
-    isAdmin,
-    isSameOrder,
-    isLengthBelow,
-    validateRoundAmount,
-    validateRoundLength,
-    validateOrder,
+const validateMobMembers = (tagged, members) => {
+    if (tagged.length === 0) return;
+    const memberIdMap = members.map(member => member.id);
+    if (!tagged.every(tagged => memberIdMap.includes(tagged))){
+        throw new ValidationError('INVALID_MEMBER');
+    }
 }
+
+const validateMessageLength = (item) => { if (item.length > 1024) throw new ValidationError('TOO_LONG') };
+const validateBufferId = id => { if (isNaN(id)) throw new ValidationError('NO_ID') };
+
+export { 
+    isAdmin, validateRoundAmount, validateTime, validateOrder, validateMobMembers, validateMessageLength, 
+    validateBufferId,
+ }

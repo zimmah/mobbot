@@ -1,143 +1,141 @@
-const fs = require('fs');
-const fsp = require('fs').promises;
-const { isSameOrder } = require('./validators');
-const { muteResponse, unmuteResponse, initResponse} = require('./responses');
-
 // internal
-const randomizeOrder = mob => {
-    throw new Error('not implemented');
-}
+const settings = {};
 
-const shouldMobSettingsUpdate = (newSettings, oldSettings) => {
-    console.log('settings should update');
-    const { mobSettings } = oldSettings;
-    if (mobSettings === undefined) return true;
-
-    const { roundTime, rounds, order } = mobSettings;
-    const { newRoundTime, newRounds, newOrder } = newSettings;
-    if ( roundTime === newRoundTime && rounds === newRounds && isSameOrder(order, newOrder)) {
-        return false;
+const initializeMob = (mob, server) => {
+    let existingMobSettings;
+    const serverName = server.name;
+    const { channelName } = mob;
+    if (settings[serverName] !== undefined) {
+        existingMobSettings = settings[serverName][channelName];
+        settings[serverName][channelName] = { ...existingMobSettings, ...mob };
+    } else {
+        settings[serverName] = {};
+        settings[serverName][channelName] = { ...mob };
     }
-    console.log('settings should definitly update')
-    return true;
 }
 
-const initialSettings = (servers) => {
-    const writes = [];
-    servers.forEach((server) => {
-        fs.existsSync(`./settings/${server.name}`) || fs.mkdirSync(`./settings/${server.name}`);
-        server.mobs.forEach(async (mob) => {
-            try {
-                await fsp.access(`./settings/${server.name}/${mob.channelName}.json`);
-                const existingSettings = require(`../settings/${server.name}/${mob.channelName}.json`);
-                if (JSON.stringify({...existingSettings, ...mob}) !== JSON.stringify({existingSettings})) {
-                    writes.push(fsp.writeFile(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify({...existingSettings, ...mob})));
-                }
-            } catch {
-                writes.push(fsp.writeFile(`./settings/${server.name}/${mob.channelName}.json`, JSON.stringify(mob)));
-            }
-        });
-    });
-    return Promise.all(writes);
-}
+const initializeServer = (server) => server.mobs.forEach( (mob) => initializeMob(mob, server) );
 
 const findMembers = (mobId, serverMembers, mobbotId) => {
     const mobMembers = serverMembers
-        .filter(member => member._roles.some(role => role === mobId) && member.id !== mobbotId)
-        .map(member => ({id: member.user.id, name: member.user.username, nickname: member.displayName}))
+        .filter( (member) => 
+            member._roles.some( (role) => role === mobId) && member.id !== mobbotId )
+        .map( (member) => (
+            { id: member.user.id, name: member.user.username, nickname: member.displayName } ))
         .flat();
     return mobMembers;
 }
 
-const findAllMobs = (server, mobbotId) => {
-    const mobbot = server.members.cache.filter(member => member.user.id === mobbotId);
-    const mobbotRoles = mobbot.map(member => member._roles).flat();
+const randomizeOrder = (mob) => {
+    const settings = getSettings(mob);
+    const { members } = settings;
+    const activeMembers = members.filter((member) => !member.isAway);
+    let currentIndex = activeMembers.length;
+    let tempValue, randomIndex;
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        tempValue = activeMembers[currentIndex];
+        activeMembers[currentIndex] = activeMembers[randomIndex];
+        activeMembers[randomIndex] = tempValue;
+    }
+    return activeMembers.map(member => member.id);
+}
+
+// exports
+const findAllMobs = (server ) => {
     const serverRoles = server.roles.cache;
-    const serverChannels = server.channels.cache;
     const serverMembers = server.members.cache;
-    const channelNames = serverChannels.map(channel => channel.name).flat();
+    const serverChannels = server.channels.cache;
+    const channelNames = serverChannels.map( (channel) => channel.name).flat();
 
-    const filteredRoles = serverRoles
-        .filter(role => mobbotRoles.includes(role.id))
-        .map(role => ({name: role.name, id: role.id, channelName: role.name.replace(' ', '-').toLowerCase()}));
+    const mobbot = server.me;
+    const mobbotRoles = mobbot._roles;
 
-    const mobs = filteredRoles
-        .filter(role => channelNames.includes(role.channelName))
-        .map(mob => ({
-            mobName: mob.name,
+    const potentialMobRoles = serverRoles
+        .filter( (role) => mobbotRoles.includes(role.id))
+        .map( (role) => ({
+            name: role.name,
+            id: role.id,
+            channelName: role.name.replace(' ', '-').toLowerCase(),
+        }));
+
+    const mobs = potentialMobRoles
+        .filter( (role) => channelNames.includes(role.channelName))
+        .map( (mob) => ({
+            serverName: server.name,
             channelName: mob.channelName,
-            channelId: serverChannels.filter(channel => channel.name === mob.channelName).map(channel => channel.id)[0],
+            mobName: mob.name,
+            channelId: serverChannels
+                .findKey( (channel) => channel.name === mob.channelName),
             roleId: mob.id,
-            members: findMembers(mob.id, serverMembers, mobbotId),
-            serverName: server.name
+            members: findMembers(mob.id, serverMembers, mobbot.id),
+            mobSettings: { rounds: 4, roundTime: 15, breakTime: 10 },
         }));
 
     return mobs;
 }
 
-// external
-const findMob = (msg) => {
-    const mob = `./settings/${msg.guild.name}/${msg.channel.name}.json`;
-    return fs.existsSync(mob) && require(`.${mob}`);
-}
-
-const init = (client, msg = undefined) => {
-    const mobbotId = client.user.id;
-    const servers = client.guilds.cache.map(server => ({
-        name: server.name,
-        mobs: findAllMobs(server, mobbotId),
-    }));
-    
-    initialSettings(servers);
-    msg && initResponse(msg);
-}
-
-const mute = (msg, mob) => {
-    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({ ...mob, muted: true }));
-    muteResponse(msg);
-}
-
-const unmute = (msg, mob) => {
-    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({ ...mob, muted: false }));
-    unmuteResponse(msg);
-}
-
-const updateBreakTime = (mob, breakTime = 10) => {
-    const settings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
-    const updatedSettings = JSON.stringify({ ...settings, mobSettings: { ...(settings.mobSettings), breakTime } })
-    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, updatedSettings);
-}
+const initializeSettings = (servers) => servers.forEach(initializeServer);
+const findMob = (msg) => settings[msg.guild.name][msg.channel.name];
 
 const updateOrder = (mob) => {
-    const settings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
-    const [first, ...rest] = settings.mobSettings.order;
-    const newOrder = [...rest, first];
-    fs.writeFileSync(`./settings/${mob.serverName}/${mob.channelName}.json`, JSON.stringify({...settings, order: newOrder}));
+    const { mobSettings } = getSettings(mob);
+    const { order } = mobSettings;
+    const [ first, ...rest ] = order;
+    const newOrder = [ ...rest, first ];
+    mobSettings.order = newOrder;
+    return newOrder;
 }
 
-const updateMobSettings = async ({ newRounds, newRoundTime, newOrder } = newSettings = {}, keepSameOrder, mob) => {
-    const oldSettings = require(`../settings/${mob.serverName}/${mob.channelName}.json`);
-    if (newOrder.length === 0 && (!keepSameOrder || !oldSettings.mobSettings)) {
-        newOrder = randomizeOrder(mob);
+const resetCurrentRound = (mob)  => {
+    const { mobSettings } = getSettings(mob);
+    mobSettings.currentRound = 0;
+}
+
+const incrementCurrentRound = (mob) => {
+    const { mobSettings } = getSettings(mob);
+    return mobSettings.currentRound += 1;
+}
+
+const updateMobSettings = ({ newRounds, newRoundTime, newOrder } = newSettings = {}, keepOrder, mob) => {
+    const { mobSettings } = getSettings(mob);
+    mobSettings.currentRound = 1;
+    if (newOrder.length === 0 && (mobSettings.order === undefined || keepOrder === false)) {
+        mobSettings.order = randomizeOrder(mob);
+    } else if (newOrder.length > 0) {
+        mobSettings.order = newOrder;
     }
-    if (shouldMobSettingsUpdate({newRounds, newRoundTime, newOrder}, oldSettings)) {
-        const settings = JSON.stringify({...oldSettings, mobSettings: {rounds: newRounds, roundTime: newRoundTime, order: newOrder}});
-        console.log(settings);
-        try {
-            await fsp.unlink(`./settings/${mob.serverName}/${mob.channelName}.json`);
-            return fsp.writeFile(`./settings/${mob.serverName}/${mob.channelName}.json`, settings);
-        } catch (e) {
-            console.log(e)
-        }
+    if (newRounds === undefined) return;
+    mobSettings.rounds = newRounds;
+    if (newRoundTime === undefined) return;
+    mobSettings.roundTime = newRoundTime;
+}
+
+const updateAwayStatus = (mob, awayMembers, isAway) => {
+    const { members } = getSettings(mob);
+    for (let awayMember of awayMembers) {
+        const member = members.find(member => member.id === awayMember);
+        member.isAway = isAway;
     }
 }
 
-module.exports = {
-    findMob,
-    init,
-    mute,
-    unmute,
-    updateBreakTime,
-    updateOrder,
-    updateMobSettings,
+const setBreakTime = (mob, breakTime) => {
+    const { mobSettings } = getSettings(mob);
+    mobSettings.breakTime = breakTime;
 }
+
+const setBreakMessage = (mob, breakMessage) => {
+    const { mobSettings } = getSettings(mob);
+    mobSettings.breakMessage = breakMessage;
+}
+
+const getSettings = (mob) => {
+    const { channelName, serverName } = mob;
+    return settings[serverName][channelName];
+}
+
+export {
+    findAllMobs, initializeSettings, findMob, updateOrder, resetCurrentRound, incrementCurrentRound,
+    updateMobSettings, setBreakTime, setBreakMessage, getSettings, updateAwayStatus,
+};
