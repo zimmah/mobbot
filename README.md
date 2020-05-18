@@ -46,15 +46,15 @@ Optional settings:
 `start <?rounds> <?round time> <?order of names seperated by spaces>`    
 * **rounds:** the number of rounds before a break
 * **round time:** the time for each round in minutes
-* **order:** space seperated list of mob members, in order
+* **order:** @mentions of mob members in the order that you want
 (leave blank to randomize all active mob members)
 
 Example:    
-`start 4 15 Alice Bob Charlie`    
+`start 4 15 @Alice @Bob @Charlie`    
 Will start a mob session with 4 rounds of 15 minutes each, with Alice as the first driver, followed by Bob, followed by Charlie, and then again Alice.
 
 Note:    
-Only use first name or nicknames, don't include spaces in the order, as spaces are used to seperate names.
+make sure to @mention the members, or else the bot won't know who you mean.
 
 ## Restarting the mob session
 Type `restart <?rounds> <?round time> <?order>` to force start a new mob session.    
