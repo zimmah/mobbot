@@ -59,16 +59,17 @@ make sure to @mention the members, or else the bot won't know who you mean.
 
 ## Restarting the mob session
 Type `restart <?rounds> <?round time> <?order>` to force start a new mob session.    
-This will behave exactly like `start`, except it will not resume a previous session, but instead force a new one.
+This will behave exactly like `start`, except it will not resume a previous session, but instead force a new one.     
+If no order is specified, start will resume with the last known order, while restart will randomize the order.
 
 ## Stopping / resuming the mob session
 Type `stop` to stop the mob timer.     
-Type `start` or react to the stop message with a 👍 to continue where you left off (every active mob member needs to react).    
+Type `(re)start` or react to the stop message with a 👍 to continue where you left off (every active mob member needs to react).    
 Reactions are the preffered method to make sure everyone is ready.
 
 ## Breaks
 Type `break` to start a 10 minute break.      
-Type `start` or react to the stop message with a 👍 to continue where you left off (every active mob member needs to react).   
+Type `(re)start` or react to the stop message with a 👍 to continue where you left off (every active mob member needs to react).   
 Reactions are the preffered method to make sure everyone is ready.   
 
 ### Optional settings
