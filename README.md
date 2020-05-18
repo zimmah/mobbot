@@ -13,6 +13,7 @@
     * [Away/Return](#away-/-return)
     * [Skipping](#skipping)
     * [Using the buffer](#using-the-buffer)
+    * [Pinning a message](#pinning-a-message)
 3. [How to add Mobbot to your server?](#how-to-add-mobbot-to-your-server)
     * [Adding Mobbot to your server](#adding-the-bot-to-your-server)
     * [Configuring Mobbot](#configuring-mobbot)
@@ -93,6 +94,10 @@ Type `buffer` to view the buffer
 Type `buffer add <message>` to add a message to the buffer.     
 Type `buffer remove <id>` to remove a message from the buffer. alias: `buffer delete <id>`     
 Type `buffer clear` to erase the buffer.
+
+## Pinning a message
+React 📌 to the message you want to pin, the bot wil pin it for you.
+To unpin it, simply remove the 📌 reaction.
 
 # How to add Mobbot to your server?
 ## Adding the bot to your server
