@@ -10,7 +10,7 @@ import { validateRoundAmount, validateTime, validateOrder,
 const nextDriver = (msg, mob) => {
     const settings = getSettings(mob);
     const { mobSettings } = settings;
-    const { rounds, order } = mobSettings;
+    const { rounds } = mobSettings;
     const currentRound = incrementCurrentRound(mob);
     if ( currentRound > rounds ) return startBreak(msg, mob, settings);
     const next = updateOrder(mob)[0];

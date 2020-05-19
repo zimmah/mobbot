@@ -23,8 +23,8 @@ client.on('messageReactionRemove', (reaction) => {
     if (mob !== undefined && reaction.emoji.name === '📌') {
         reaction.message.unpin();
         reaction.message.channel.send('message unpinned.');
-    };
-})
+    }
+});
 
 client.on('message', (msg) => {
     try {

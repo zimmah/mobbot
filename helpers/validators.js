@@ -1,4 +1,4 @@
-class ValidationError { constructor(message) { this.message = message } };
+class ValidationError { constructor(message) { this.message = message } }
 
 const isAdmin = (member) => member.hasPermission('ADMINISTRATOR');
 
