@@ -85,11 +85,10 @@ const awayHandler = (msg, mob, isAway) => {
     const tagged = msg.mentions.users.map(user => user.id);
     const { members } = getSettings(mob);
     validateMobMembers(tagged, members);
-    const awayMembers = members
-        .map(member => tagged.includes(member.id) ? {...member, isAway} : member)
-        .filter(member => member.isAway)
+    const updatedMembers = members
+        .filter(member => tagged.includes(member.id))
         .map(member => member.id);
-    updateAwayStatus(mob, awayMembers, isAway);
+    const awayMembers = updateAwayStatus(mob, updatedMembers, isAway);
     awayResponse(msg, awayMembers);
 }
 

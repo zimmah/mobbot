@@ -113,11 +113,20 @@ const updateMobSettings = ({ newRounds, newRoundTime, newOrder } = newSettings =
 }
 
 const updateAwayStatus = (mob, awayMembers, isAway) => {
-    const { members } = getSettings(mob);
+    const { members, mobSettings } = getSettings(mob);
     for (let awayMember of awayMembers) {
         const member = members.find(member => member.id === awayMember);
         member.isAway = isAway;
     }
+    if (isAway) {
+        awayMembers.forEach(awayMember => {
+            const index = mobSettings.order.findIndex(id => awayMember === id);
+            mobSettings.order.splice(index, 1);
+        });
+    } else {
+        mobSettings.order.push(...awayMembers);
+    }
+    return members.filter(member => member.isAway).map(member => member.id);
 }
 
 const setBreakTime = (mob, breakTime) => {

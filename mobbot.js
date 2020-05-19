@@ -48,7 +48,6 @@ client.on('message', (msg) => {
 
     } catch (error) {
         errorResponse(msg, error.message);
-        console.error(error);
     }
 });
 
